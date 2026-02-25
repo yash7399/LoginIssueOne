@@ -1,1 +1,206 @@
-Hey there this is to resolve login issue  - modified in new-feature branch
+📁 1️⃣ App.jsx
+import React from "react";
+import Form1 from "./forms/Form1";
+
+function App() {
+  return <Form1 />;
+}
+
+export default App;
+📁 2️⃣ forms/Form1.jsx
+import React, { useState } from "react";
+import "../styles/formLayout.css";
+
+import Header from "../components/Header";
+import VendorDetails from "../components/VendorDetails";
+import ContactDetails from "../components/ContactDetails";
+import AddressSection from "../components/AddressSection";
+import BillingSection from "../components/BillingSection";
+import SegmentSection from "../components/SegmentSection";
+import CaptchaSection from "../components/CaptchaSection";
+import FormButtons from "../components/FormButtons";
+
+const Form1 = () => {
+  const [formData, setFormData] = useState({
+    vendorName: "",
+    ipAddress: "",
+    port: "",
+    status: "",
+    mobileNumber: "",
+    registrationDate: "",
+    address: {
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      state: "",
+      zip: "",
+      country: ""
+    },
+    billingAddress: {
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      state: "",
+      zip: "",
+      country: ""
+    },
+    billingSameAsAddress: false,
+    segment: [],
+    captcha: ""
+  });
+
+  const [segmentData, setSegmentData] = useState({});
+  const [addressOpen, setAddressOpen] = useState(false);
+  const [billingOpen, setBillingOpen] = useState(false);
+
+  const subscriptionTypeValue = {
+    "Equity (CM)": ["Real Time/BOD", "EOD Bhavcopy"],
+    "F/O": ["Real Time/BOD", "EOD Bhavcopy", "Historicla Trade Data"],
+    "Indices": ["Real Time/BOD", "EOD Bhavcopy"]
+  };
+
+  const packetCodeValue = {
+    "Equity (CM)": ["CN, PN"],
+    "F/O": ["FN/FP"],
+    "Indices": ["CX"]
+  };
+
+  const levelValue = {
+    "Equity (CM)": ["Level 1", "Level 2", "Level 3"],
+    "F/O": ["Level 1", "Level 2"],
+    "Indices": []
+  };
+
+  const segmentOptions = [
+    { id: "equity", value: "Equity (CM)", label: "Equity (CM)" },
+    { id: "fo", value: "F/O", label: "F/O" },
+    { id: "indices", value: "Indices", label: "Indices" }
+  ];
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name.startsWith("address.") || name.startsWith("billingAddress.")) {
+      const [section, field] = name.split(".");
+      setFormData(prev => ({
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [field]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleBillingSameChange = (e) => {
+    const checked = e.target.checked;
+    setFormData(prev => ({
+      ...prev,
+      billingSameAsAddress: checked,
+      billingAddress: checked
+        ? { ...prev.address }
+        : {
+            addressLine1: "",
+            addressLine2: "",
+            city: "",
+            state: "",
+            zip: "",
+            country: ""
+          }
+    }));
+  };
+
+  const handleSegmentChange = (value, checked) => {
+    const currentSegments = formData.segment || [];
+
+    if (checked) {
+      setFormData({
+        ...formData,
+        segment: [...currentSegments, value]
+      });
+      setSegmentData(prev => ({
+        ...prev,
+        [value]: {
+          subscriptionType: "",
+          packetCode: "",
+          levels: ""
+        }
+      }));
+    } else {
+      const newSegments = currentSegments.filter(s => s !== value);
+      setFormData({ ...formData, segment: newSegments });
+
+      setSegmentData(prev => {
+        const newData = { ...prev };
+        delete newData[value];
+        return newData;
+      });
+    }
+  };
+
+  const handleSegmentFieldChange = (segment, field, value) => {
+    setSegmentData(prev => ({
+      ...prev,
+      [segment]: {
+        ...prev[segment],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Form Data:", formData);
+    console.log("Segment Data:", segmentData);
+    alert("Form submitted successfully!");
+  };
+
+  return (
+    <>
+      <Header />
+      <div className="form-container">
+        <p className="note">Note: All fields marked * are mandatory.</p>
+
+        <form onSubmit={handleSubmit}>
+          <VendorDetails formData={formData} handleChange={handleChange} />
+
+          <ContactDetails formData={formData} handleChange={handleChange} />
+
+          <AddressSection
+            formData={formData}
+            handleChange={handleChange}
+            isOpen={addressOpen}
+            toggle={() => setAddressOpen(!addressOpen)}
+          />
+
+          <BillingSection
+            formData={formData}
+            handleChange={handleChange}
+            isOpen={billingOpen}
+            toggle={() => setBillingOpen(!billingOpen)}
+            handleBillingSameChange={handleBillingSameChange}
+          />
+
+          <SegmentSection
+            formData={formData}
+            segmentData={segmentData}
+            handleSegmentChange={handleSegmentChange}
+            handleSegmentFieldChange={handleSegmentFieldChange}
+            subscriptionTypeValue={subscriptionTypeValue}
+            packetCodeValue={packetCodeValue}
+            levelValue={levelValue}
+            segmentOptions={segmentOptions}
+          />
+
+          <CaptchaSection formData={formData} handleChange={handleChange} />
+
+          <FormButtons />
+        </form>
+      </div>
+    </>
+  );
+};
+
+export default Form1;
